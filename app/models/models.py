@@ -3,15 +3,18 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
 
+from typing import Dict, Any, Optional
+
 class User(UserMixin, db.Model):
+    """User account model for Customers, Riders, and Admins."""
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='CUSTOMER') # CUSTOMER, RIDER, ADMIN
+    role = db.Column(db.String(20), nullable=False, default='CUSTOMER', index=True) # CUSTOMER, RIDER, ADMIN
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -19,13 +22,16 @@ class User(UserMixin, db.Model):
     rides_as_customer = db.relationship('Ride', foreign_keys='Ride.customer_id', backref='customer', lazy='dynamic')
     rides_as_rider = db.relationship('Ride', foreign_keys='Ride.rider_id', backref='rider', lazy='dynamic')
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
+        """Hash and set user password."""
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
+        """Verify password hash against input password."""
         return check_password_hash(self.password_hash, password)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize User object to dictionary."""
         return {
             'id': self.id,
             'name': self.name,
@@ -35,23 +41,26 @@ class User(UserMixin, db.Model):
         }
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id: str) -> Optional['User']:
+    """Flask-Login user loader callback."""
     return User.query.get(int(user_id))
 
 
 class RiderProfile(db.Model):
+    """Profile extension for Partner Riders with availability & approval status."""
     __tablename__ = 'rider_profiles'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False, index=True)
     vehicle_type = db.Column(db.String(50), nullable=False, default='Motorbike')
     vehicle_number = db.Column(db.String(30), nullable=True)
-    is_available = db.Column(db.Boolean, default=False, nullable=False)
-    is_approved = db.Column(db.Boolean, default=True, nullable=False) # Requires Admin Approval
+    is_available = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    is_approved = db.Column(db.Boolean, default=True, nullable=False, index=True) # Requires Admin Approval
     rating = db.Column(db.Float, default=5.0)
     total_rides = db.Column(db.Integer, default=0)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize RiderProfile to dictionary."""
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -68,17 +77,19 @@ class RiderProfile(db.Model):
 
 
 class Location(db.Model):
+    """Campus geographic location node model."""
     __tablename__ = 'locations'
 
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(50), unique=True, nullable=False)
+    code = db.Column(db.String(50), unique=True, nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50), nullable=False)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
-    active = db.Column(db.Boolean, default=True)
+    active = db.Column(db.Boolean, default=True, index=True)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize Location to dictionary."""
         return {
             'id': self.id,
             'code': self.code,
@@ -91,28 +102,30 @@ class Location(db.Model):
 
 
 class Fare(db.Model):
+    """Bidirectional fixed fare lookup table."""
     __tablename__ = 'fares'
 
     id = db.Column(db.Integer, primary_key=True)
-    pickup_location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
-    drop_location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
+    pickup_location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False, index=True)
+    drop_location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False, index=True)
     amount = db.Column(db.Float, nullable=False)
     active = db.Column(db.Boolean, default=True)
 
 
 class Ride(db.Model):
+    """Core Ride lifecycle & real-time dispatch state machine model."""
     __tablename__ = 'rides'
 
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    rider_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    rider_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     pickup_code = db.Column(db.String(50), nullable=False)
     pickup_name = db.Column(db.String(100), nullable=False)
     drop_code = db.Column(db.String(50), nullable=False)
     drop_name = db.Column(db.String(100), nullable=False)
     fare = db.Column(db.Float, nullable=False)
     otp = db.Column(db.String(4), nullable=True)
-    status = db.Column(db.String(20), nullable=False, default='DISPATCHING') 
+    status = db.Column(db.String(20), nullable=False, default='DISPATCHING', index=True) 
     # Valid statuses: REQUESTED, DISPATCHING, ASSIGNED, ARRIVING, ACTIVE, COMPLETED, CANCELLED, EXPIRED
     cancellation_reason = db.Column(db.String(255), nullable=True)
     
@@ -122,7 +135,7 @@ class Ride(db.Model):
     location_accuracy = db.Column(db.Float, nullable=True)
     location_updated_at = db.Column(db.DateTime, nullable=True)
 
-    requested_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     assigned_at = db.Column(db.DateTime, nullable=True)
     started_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
