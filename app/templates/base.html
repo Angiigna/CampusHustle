@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Papido - Instant Campus Bike-Taxi{% endblock %}</title>
+    
+    <!-- Google Fonts & Tailwind CSS CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons, Socket.IO & Leaflet OpenStreetMap CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- App Styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            900: '#78350f',
+                        },
+                        papido: {
+                            yellow: '#FFB800',
+                            orange: '#FF5722',
+                            red: '#D90429',
+                            darkRed: '#9B111E'
+                        },
+                        dark: {
+                            800: '#111827',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#090d16] text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-amber-500/20 px-4 py-2.5">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-2.5 group">
+                <div class="h-10 w-auto flex items-center">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Papido Logo" class="h-9 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]">
+                </div>
+                <div class="border-l border-slate-700/80 pl-2.5">
+                    <span class="font-heading font-extrabold text-lg tracking-tight text-white block leading-tight">Papido</span>
+                    <span class="text-[10px] block font-mono text-amber-400 font-bold uppercase tracking-wider">Campus Mobility</span>
+                </div>
+            </a>
+
+            {% if current_user.is_authenticated %}
+            <div class="flex items-center space-x-3">
+                <div class="text-right">
+                    <span class="block text-xs font-semibold text-slate-200">{{ current_user.name }}</span>
+                    <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                        {{ current_user.role }}
+                    </span>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="w-8 h-8 rounded-xl bg-slate-800/90 hover:bg-rose-950/60 hover:text-rose-400 text-slate-400 flex items-center justify-center transition-colors text-xs border border-slate-700/60" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-1 max-w-md w-full mx-auto p-4 relative">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-2 mb-4">
+                {% for category, message in messages %}
+                    <div class="p-3 rounded-xl text-xs font-medium border flex items-center space-x-2 shadow-lg {% if category == 'error' %}bg-rose-950/80 border-rose-800 text-rose-200{% else %}bg-emerald-950/80 border-emerald-800 text-emerald-200{% endif %}">
+                        <i class="fa-solid {% if category == 'error' %}fa-circle-exclamation text-rose-400{% else %}fa-circle-check text-emerald-400{% endif %} text-base"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Audio Alert Sound for Riders -->
+    <audio id="requestChime" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <!-- App JavaScript -->
+    <script src="{{ url_for('static', filename='js/socket_client.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

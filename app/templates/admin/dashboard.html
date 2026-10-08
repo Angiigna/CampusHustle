@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Operations Console - Papido{% endblock %}
+
+{% block content %}
+<div class="space-y-5 py-2 max-w-2xl mx-auto" id="adminApp">
+    
+    <!-- Admin Header & Mode Banner -->
+    <div class="bg-gradient-to-r from-amber-950/60 to-slate-900 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-lg font-bold">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <h1 class="font-heading font-extrabold text-base text-white">Dispatcher Oversight</h1>
+                <p class="text-[11px] text-slate-400">Zero human intervention automated dispatch monitoring.</p>
+            </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase tracking-wider animate-pulse flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>SYSTEM LIVE</span>
+        </span>
+    </div>
+
+    <!-- Live KPI Metrics Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <!-- KPI 1: Revenue -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-1 shadow-md">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Today's Revenue</span>
+            <div class="font-heading font-black text-xl text-emerald-400">
+                ₹<span id="kpiRevenue">{{ revenue_today }}</span>
+            </div>
+        </div>
+
+        <!-- KPI 2: Available Riders -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-1 shadow-md">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Riders Available</span>
+            <div class="font-heading font-black text-xl text-white">
+                <span id="kpiRiders">{{ available_riders }}</span><span class="text-xs text-slate-500 font-normal"> / {{ total_riders }}</span>
+            </div>
+        </div>
+
+        <!-- KPI 3: Dispatching Requests -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-1 shadow-md">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Dispatching</span>
+            <div class="font-heading font-black text-xl text-amber-400">
+                <span id="kpiDispatching">{{ dispatching_count }}</span>
+            </div>
+        </div>
+
+        <!-- KPI 4: Completed Today -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-1 shadow-md">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Completed Today</span>
+            <div class="font-heading font-black text-xl text-blue-400">
+                <span id="kpiCompleted">{{ completed_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Rider Authorization Requests Section -->
+    {% if pending_riders %}
+    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-heading font-bold text-sm text-amber-400 flex items-center space-x-2">
+                <i class="fa-solid fa-user-clock"></i>
+                <span>Pending Rider Registrations ({{ pending_riders|length }})</span>
+            </h3>
+            <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded font-bold uppercase">Authorization Required</span>
+        </div>
+
+        <div class="space-y-2">
+            {% for rider in pending_riders %}
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-white text-sm">{{ rider.name }}</h4>
+                    <p class="text-slate-400 text-[11px]">{{ rider.email }} • {{ rider.phone }}</p>
+                    <p class="text-slate-500 text-[10px]">Vehicle: <span class="text-slate-300 font-semibold">{{ rider.vehicle_type }} ({{ rider.vehicle_number or 'AP09-REG' }})</span></p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="rejectRider({{ rider.id }})" class="py-1.5 px-3 bg-slate-800 hover:bg-rose-950 hover:text-rose-300 text-slate-400 font-semibold rounded-lg text-xs transition-colors">
+                        Reject
+                    </button>
+                    <button onclick="approveRider({{ rider.id }})" class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center space-x-1">
+                        <i class="fa-solid fa-check text-xs"></i>
+                        <span>Approve</span>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Live Active Rides Monitor Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-heading font-bold text-sm text-white flex items-center space-x-2">
+                <i class="fa-solid fa-clock text-amber-400"></i>
+                <span>Live Active Rides</span>
+            </h3>
+            <span class="text-[10px] text-slate-400 font-mono">Auto-refreshes in real-time</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-800 text-[10px] font-bold uppercase text-slate-500">
+                        <th class="py-2 px-2">ID</th>
+                        <th class="py-2 px-2">Customer</th>
+                        <th class="py-2 px-2">Route</th>
+                        <th class="py-2 px-2">Fare</th>
+                        <th class="py-2 px-2">Rider</th>
+                        <th class="py-2 px-2">Status</th>
+                        <th class="py-2 px-2 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="adminActiveTableBody" class="divide-y divide-slate-800/60 font-medium">
+                    {% if not active_rides %}
+                    <tr>
+                        <td colspan="7" class="py-6 text-center text-slate-500 italic text-xs">
+                            No active rides in dispatch or en-route.
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% for ride in active_rides %}
+                    <tr class="hover:bg-slate-800/40 transition-colors" data-admin-ride-id="{{ ride.id }}">
+                        <td class="py-2.5 px-2 font-mono font-bold text-slate-400">#{{ ride.id }}</td>
+                        <td class="py-2.5 px-2 font-semibold text-white">{{ ride.customer_name }}</td>
+                        <td class="py-2.5 px-2 text-slate-300">
+                            {{ ride.pickup_name }} <i class="fa-solid fa-arrow-right text-[9px] text-slate-500"></i> {{ ride.drop_name }}
+                        </td>
+                        <td class="py-2.5 px-2 font-bold text-emerald-400">₹{{ ride.fare }}</td>
+                        <td class="py-2.5 px-2 text-slate-300">{{ ride.rider_name or 'Unassigned' }}</td>
+                        <td class="py-2.5 px-2">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                                {{ ride.status }}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-2 text-right">
+                            <button onclick="adminCancelRide({{ ride.id }})" class="px-2 py-1 bg-rose-950/80 hover:bg-rose-900 text-rose-300 rounded border border-rose-800 text-[10px] font-semibold">
+                                Cancel
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent History Log Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-heading font-bold text-sm text-white flex items-center space-x-2">
+                <i class="fa-solid fa-history text-slate-400"></i>
+                <span>Completed & Historical Logs</span>
+            </h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-800 text-[10px] font-bold uppercase text-slate-500">
+                        <th class="py-2 px-2">ID</th>
+                        <th class="py-2 px-2">Customer</th>
+                        <th class="py-2 px-2">Rider</th>
+                        <th class="py-2 px-2">Fare</th>
+                        <th class="py-2 px-2">Status</th>
+                        <th class="py-2 px-2 text-right">Time</th>
+                    </tr>
+                </thead>
+                <tbody id="adminHistoryTableBody" class="divide-y divide-slate-800/60 font-medium">
+                    {% for ride in recent_history %}
+                    <tr class="text-slate-400 hover:bg-slate-800/40">
+                        <td class="py-2 px-2 font-mono">#{{ ride.id }}</td>
+                        <td class="py-2 px-2 font-medium text-slate-300">{{ ride.customer_name }}</td>
+                        <td class="py-2 px-2">{{ ride.rider_name or '-' }}</td>
+                        <td class="py-2 px-2 font-bold text-slate-300">₹{{ ride.fare }}</td>
+                        <td class="py-2 px-2">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase {% if ride.status == 'COMPLETED' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/30{% else %}bg-rose-500/10 text-rose-400 border border-rose-500/30{% endif %}">
+                                {{ ride.status }}
+                            </span>
+                        </td>
+                        <td class="py-2 px-2 text-right text-[10px] font-mono text-slate-500">{{ ride.requested_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

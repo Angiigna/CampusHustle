@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Partner Rider Application - Papido{% endblock %}
+
+{% block content %}
+<div class="py-4 space-y-5">
+    <div class="text-center space-y-1">
+        <h1 class="font-heading font-extrabold text-2xl text-white">Apply as Papido Campus Rider</h1>
+        <p class="text-slate-400 text-xs font-medium">Earn on campus by offering safe, verified bike rides.</p>
+    </div>
+
+    <div class="bg-slate-900/80 border border-amber-500/20 rounded-2xl p-5 shadow-xl space-y-4 backdrop-blur-sm">
+        <form action="{{ url_for('auth.register_rider') }}" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+                <input type="text" name="name" required placeholder="e.g. Vikram Singh" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+                    <input type="email" name="email" required placeholder="rider@campus.edu" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Phone</label>
+                    <input type="tel" name="phone" required placeholder="9123456789" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Vehicle Type</label>
+                    <select name="vehicle_type" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+                        <option value="Motorbike">Motorbike</option>
+                        <option value="Scooter">Scooter</option>
+                        <option value="Electric Bike">Electric Bike (EV)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Vehicle Number</label>
+                    <input type="text" name="vehicle_number" placeholder="e.g. AP09 AB 1234" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+                <input type="password" name="password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-[11px] text-amber-300 flex items-start space-x-2">
+                <i class="fa-solid fa-shield-halved text-amber-400 text-sm mt-0.5"></i>
+                <span>All rider accounts are verified and authorized by Campus Operations before going online.</span>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-sm shadow-lg shadow-amber-500/20 transition-all">
+                Submit Rider Application
+            </button>
+        </form>
+
+        <div class="text-center pt-2 border-t border-slate-800">
+            <span class="text-xs text-slate-400">Already a registered rider? </span>
+            <a href="{{ url_for('auth.login') }}" class="text-xs font-bold text-amber-400 hover:underline">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

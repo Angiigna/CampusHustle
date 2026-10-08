@@ -1,0 +1,16 @@
+.venv
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.log
+.env
+.env.local
+.vscode
+.idea
+README.md
+implementation_plan.md
+walkthrough.md
