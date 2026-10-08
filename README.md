@@ -39,7 +39,7 @@ To allow the **PromptWars Hackathon Jury & Panel** to evaluate the complete end-
 
 | Field | Credentials |
 |---|---|
-| **Login URL** | [https://302b3001b2c7891c-175-184-252-178.serveousercontent.com/login](https://302b3001b2c7891c-175-184-252-178.serveousercontent.com/login) |
+| **Login URL** | [https://papidocampus.loca.lt/login](https://papidocampus.loca.lt/login) |
 | **Email ID** | `sivangisankar12a@gmail.com` |
 | **Password** | `admin123` |
 | **Role** | `ADMIN` (Campus Dispatch & Rider Operations Manager) |
