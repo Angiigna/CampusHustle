@@ -55,7 +55,7 @@ function calculateAndPreviewFare() {
     if (!pickup || !drop || pickup === drop) {
         previewBox.classList.add('hidden');
         confirmBtn.disabled = true;
-        confirmBtn.className = "w-full py-3.5 px-4 bg-slate-800 text-slate-500 font-bold rounded-xl text-sm cursor-not-allowed";
+        confirmBtn.className = "w-full py-3.5 px-4 bg-slate-800 text-slate-500 font-bold rounded-xl text-sm cursor-not-allowed flex items-center justify-center space-x-2 transition-all opacity-60";
         return;
     }
 
@@ -64,7 +64,7 @@ function calculateAndPreviewFare() {
     fareAmountText.textContent = `₹${fare}`;
     previewBox.classList.remove('hidden');
     confirmBtn.disabled = false;
-    confirmBtn.className = "w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/30 cursor-pointer flex items-center justify-center space-x-2";
+    confirmBtn.className = "w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-sm transition-all shadow-lg shadow-amber-500/30 cursor-pointer flex items-center justify-center space-x-2 opacity-100";
 
     // 2. Async verification with backend API
     fetch(`/api/fare?pickup=${encodeURIComponent(pickup)}&drop=${encodeURIComponent(drop)}`)
@@ -80,10 +80,23 @@ function calculateAndPreviewFare() {
 function openConfirmationModal() {
     const pickupSelect = document.getElementById('pickupSelect');
     const dropSelect = document.getElementById('dropSelect');
-    
-    const pickupText = pickupSelect.options[pickupSelect.selectedIndex].text;
-    const dropText = dropSelect.options[dropSelect.selectedIndex].text;
-    const fareText = document.getElementById('previewFareAmount').textContent;
+    if (!pickupSelect || !dropSelect) return;
+
+    const pickup = pickupSelect.value;
+    const drop = dropSelect.value;
+
+    if (!pickup || !drop) {
+        alert('Please select both a pickup location and a drop destination.');
+        return;
+    }
+    if (pickup === drop) {
+        alert('Pickup and drop-off locations cannot be the same. Please choose a different destination.');
+        return;
+    }
+
+    const pickupText = pickupSelect.options[pickupSelect.selectedIndex]?.text || pickup;
+    const dropText = dropSelect.options[dropSelect.selectedIndex]?.text || drop;
+    const fareText = document.getElementById('previewFareAmount')?.textContent || '₹25';
 
     document.getElementById('modalPickupText').textContent = pickupText;
     document.getElementById('modalDropText').textContent = dropText;
@@ -396,9 +409,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pickupSelect) {
         pickupSelect.addEventListener('change', calculateAndPreviewFare);
         pickupSelect.addEventListener('input', calculateAndPreviewFare);
+        pickupSelect.addEventListener('blur', calculateAndPreviewFare);
     }
     if (dropSelect) {
         dropSelect.addEventListener('change', calculateAndPreviewFare);
         dropSelect.addEventListener('input', calculateAndPreviewFare);
+        dropSelect.addEventListener('blur', calculateAndPreviewFare);
     }
+
+    // Initial check in case options were pre-selected
+    calculateAndPreviewFare();
 });
